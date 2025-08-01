@@ -1,12 +1,15 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Category Spending Limits
-        </h2>
-    </x-slot>
+@extends('layouts.app-layout')
 
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <!-- Success message -->
+            @if(session('success'))
+                <div class="p-4 mb-4 bg-green-100 text-green-700 rounded">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <!-- Add New Limit Form -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
@@ -21,16 +24,26 @@
                                         required>
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
                                     @endforeach
                                 </select>
+                                @error('category_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
                             
                             <div>
                                 <label for="limit_amount" class="block text-sm font-medium text-gray-700">Limit Amount ($)</label>
                                 <input type="number" name="limit_amount" id="limit_amount" step="0.01" min="0.01"
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                                       value="{{ old('limit_amount') }}"
+                                       oninput="this.value = this.value < 0.01 ? 0.01 : this.value"
                                        required>
+                                @error('limit_amount')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
                             
                             <div>
@@ -38,9 +51,12 @@
                                 <select name="period" id="period" 
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
                                         required>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="yearly">Yearly</option>
+                                    <option value="monthly" {{ old('period', 'monthly') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                    <option value="yearly" {{ old('period') == 'yearly' ? 'selected' : '' }}>Yearly</option>
                                 </select>
+                                @error('period')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
                             
                             <div class="flex items-end">
@@ -114,13 +130,4 @@
             </div>
         </div>
     </div>
-    <!-- Success message -->
-@if(session('success'))
-    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-        {{ session('success') }}
-    </div>
-@endif
-
-<!-- Input validation -->
-<input ... oninput="validity.valid||(value='');">
-</x-app-layout>
+@endsection

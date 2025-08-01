@@ -19,10 +19,13 @@ public function index()
         ->where('type', 'personal')
         ->sum('amount');
     
-    // Team expenses (all expenses marked as 'team' type)
-    $teamExpenses = $user->expenses()
-        ->where('type', 'team')
-        ->sum('amount');
+    // Team expenses (only if user is part of a team)
+    $teamExpenses = 0;
+    if ($user->team) {
+        $teamExpenses = $user->team->expenses()
+            ->where('type', 'team')
+            ->sum('amount');
+    }
     
     // Combined expenses by category
     $expensesByCategory = $user->expenses()

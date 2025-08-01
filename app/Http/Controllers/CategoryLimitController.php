@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\CategoryLimit;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CategoryLimitController extends Controller
 {
+    use AuthorizesRequests;
     // public function index()
     // {
     //     $user = Auth::user();
@@ -40,24 +42,30 @@ class CategoryLimitController extends Controller
 // }
  public function index()
     {
-        return $this->create(); // Redirect to create view
+    
+    $user = Auth::user();
+    
+    if (!$user->team) {
+        return redirect()->route('teams.index')
+            ->with('error', 'You need to be part of a team to manage category limits.');
+    }
+
+    $limits = CategoryLimit::with('category')
+        ->where('team_id', $user->team_id)
+        ->get();
+        
+    $categories = Category::all();
+    
+    return view('category-limits.create', compact('limits', 'categories'));
     }
 
     public function create()
     {
-        $user = Auth::user();
-        if (!$user->team) {
-            return redirect()->route('teams.index')->with('error', 'Join a team first');
-        }
-
-        return view('category-limits.create', [
-            'categories' => Category::all(),
-            'limits' => $user->team->categoryLimits
-        ]);
+      return $this->index();
     }
 
     public function store(Request $request)
-    {
+    {   $this->authorize('manage', CategoryLimit::class);
         $user = Auth::user();
         
         if (!$user->team) {
@@ -87,7 +95,8 @@ class CategoryLimitController extends Controller
     }
 
     public function destroy(CategoryLimit $categoryLimit)
-    {
+    {    
+         $this->authorize('manage', $categoryLimit);
         $categoryLimit->delete();
         
         return redirect()->route('category-limits.index')
